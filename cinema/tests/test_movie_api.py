@@ -3,6 +3,7 @@ import os
 
 from PIL import Image
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
@@ -214,6 +215,21 @@ class AuthenticatedMovieApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(Movie.objects.filter(title="New movie").exists())
+
+    def test_upload_image_forbidden_for_non_admin(self):
+        movie = sample_movie()
+        url = image_upload_url(movie.id)
+
+        image = SimpleUploadedFile(
+            "test.jpg",
+            b"file_content",
+            content_type="image/jpeg",
+        )
+
+        res = self.client.post(url, {"image": image}, format="multipart")
+
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
 
 
 class AdminMovieApiTests(TestCase):
