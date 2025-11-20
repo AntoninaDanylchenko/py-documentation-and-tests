@@ -334,3 +334,36 @@ class MovieFilterTests(TestCase):
         self.assertIn(movie2.title, returned_titles)
         self.assertIn(movie3.title, returned_titles)
 
+    def test_filter_movies_by_actors(self):
+        actor1 = sample_actor(first_name="Keanu", last_name="Reeves")
+        actor2 = sample_actor(first_name="Leonardo", last_name="DiCaprio")
+
+        movie1 = sample_movie(title="Movie with Keanu")
+        movie1.actors.add(actor1)
+
+        movie2 = sample_movie(title="Movie with Leo")
+        movie2.actors.add(actor2)
+
+        movie3 = sample_movie(title="Movie with both")
+        movie3.actors.add(actor1, actor2)
+
+        res = self.client.get(MOVIE_URL, {"actors": str(actor1.id)})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        returned_titles = {movie["title"] for movie in res.data}
+
+        self.assertIn(movie1.title, returned_titles)
+        self.assertIn(movie3.title, returned_titles)
+        self.assertNotIn(movie2.title, returned_titles)
+
+        res = self.client.get(
+            MOVIE_URL,
+            {"actors": f"{actor1.id},{actor2.id}"}
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        returned_titles = {movie["title"] for movie in res.data}
+
+        self.assertIn(movie1.title, returned_titles)
+        self.assertIn(movie2.title, returned_titles)
+        self.assertIn(movie3.title, returned_titles)
+
+
